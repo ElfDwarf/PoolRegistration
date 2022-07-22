@@ -4,11 +4,13 @@ import com.example.poolregistration.exceptions.ClientNotFoundException;
 import com.example.poolregistration.model.dao.PoolClient;
 import com.example.poolregistration.model.response.BasicClientDataResponse;
 import com.example.poolregistration.repository.ClientsRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Service
 public class ClientsService {
 
     private final ClientsRepository clientsRepository;
