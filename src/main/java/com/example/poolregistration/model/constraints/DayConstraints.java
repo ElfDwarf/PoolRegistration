@@ -13,10 +13,10 @@ public class DayConstraints {
     public int getStartTime() {
         return startTime;
     }
-    int getEndTime() {
+    public int getEndTime() {
         return endTime;
     }
-    int getMaxClientsPerTime() {
+    public int getMaxClientsPerTime() {
         return maxClientsPerTime;
     }
 }

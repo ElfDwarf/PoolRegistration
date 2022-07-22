@@ -24,7 +24,7 @@ public class TimetableController {
 
     @GetMapping("available")
     public List<OrdersByDateResponse> getAvailableOrdersByDate(@RequestParam("date") String date) {
-        return reserveService.getAvailableByDatge(date);
+        return reserveService.getAvailableByDate(date);
     }
 
     @PostMapping("reserve")

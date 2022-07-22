@@ -4,7 +4,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity(name = "order")
 public class PoolOrder {
@@ -15,12 +16,13 @@ public class PoolOrder {
     @ManyToMany
     private PoolClient client;
 
-    private LocalDateTime reserveTime;
-
+    private LocalDate reserveDate;
+    private LocalTime reserveTime;
     private int duration;
 
-    public PoolOrder(PoolClient client, LocalDateTime reserveTime, int duration) {
+    public PoolOrder(PoolClient client, LocalDate reserveDate, LocalTime reserveTime, int duration) {
         this.client = client;
+        this.reserveDate = reserveDate;
         this.reserveTime = reserveTime;
         this.duration = duration;
     }
@@ -37,15 +39,23 @@ public class PoolOrder {
         return client;
     }
 
-    public void setClient(PoolClient clientId) {
-        this.client = clientId;
+    public void setClient(PoolClient client) {
+        this.client = client;
     }
 
-    public LocalDateTime getReserveTime() {
+    public LocalDate getReserveDate() {
+        return reserveDate;
+    }
+
+    public void setReserveDate(LocalDate reserveDate) {
+        this.reserveDate = reserveDate;
+    }
+
+    public LocalTime getReserveTime() {
         return reserveTime;
     }
 
-    public void setReserveTime(LocalDateTime reserveTime) {
+    public void setReserveTime(LocalTime reserveTime) {
         this.reserveTime = reserveTime;
     }
 

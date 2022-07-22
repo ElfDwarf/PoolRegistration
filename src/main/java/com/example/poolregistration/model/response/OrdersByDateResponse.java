@@ -2,9 +2,9 @@ package com.example.poolregistration.model.response;
 
 public class OrdersByDateResponse {
     private final String time;
-    private final String count;
+    private final int count;
 
-    public OrdersByDateResponse(String time, String count) {
+    public OrdersByDateResponse(String time, int count) {
         this.time = time;
         this.count = count;
     }
@@ -13,7 +13,7 @@ public class OrdersByDateResponse {
         return time;
     }
 
-    public String getCount() {
+    public int getCount() {
         return count;
     }
 }
