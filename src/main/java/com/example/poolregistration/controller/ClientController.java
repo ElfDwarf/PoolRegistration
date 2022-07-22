@@ -2,7 +2,6 @@ package com.example.poolregistration.controller;
 
 import com.example.poolregistration.model.dao.PoolClient;
 import com.example.poolregistration.service.ClientsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +10,7 @@ import java.util.List;
 @RestController(value = "api/v0/pool/client")
 public class ClientController {
 
-    private ClientsService clientsService;
+    private final ClientsService clientsService;
 
     public ClientController(ClientsService clientsService) {
         this.clientsService = clientsService;

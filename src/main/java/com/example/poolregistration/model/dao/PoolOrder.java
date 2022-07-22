@@ -1,11 +1,13 @@
 package com.example.poolregistration.model.dao;
 
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import java.time.LocalDateTime;
 
-public class Order {
+@Entity(name = "order")
+public class PoolOrder {
     @Id
     @GeneratedValue
     private Long id;
@@ -17,7 +19,7 @@ public class Order {
 
     private int duration;
 
-    public Order(PoolClient client, LocalDateTime reserveTime, int duration) {
+    public PoolOrder(PoolClient client, LocalDateTime reserveTime, int duration) {
         this.client = client;
         this.reserveTime = reserveTime;
         this.duration = duration;
