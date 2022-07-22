@@ -1,8 +1,11 @@
 package com.example.poolregistration.controller;
 
+import com.example.poolregistration.exceptions.ClientNotFoundException;
 import com.example.poolregistration.model.dao.PoolClient;
+import com.example.poolregistration.model.response.BasicClientDataResponse;
 import com.example.poolregistration.service.ClientsService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,14 +20,14 @@ public class ClientController {
     }
 
     @GetMapping("all")
-    public List<PoolClient> getClients() {
+    public List<BasicClientDataResponse> getClients() {
         return clientsService.getClients();
     }
 
 
     @GetMapping("get")
-    public PoolClient getClient(long id) {
-        return clientsService.getClient(id);
+    public ResponseEntity<PoolClient> getClient(@RequestParam("id") long id) {
+        return ResponseEntity.of(clientsService.getClient(id));
     }
 
 
@@ -35,7 +38,12 @@ public class ClientController {
     }
 
     @PostMapping("update")
-    public PoolClient updateClient(@RequestBody PoolClient client) {
-        return clientsService.updateClient(client);
+    public ResponseEntity<PoolClient> updateClient(@RequestBody PoolClient client) {
+        try {
+            return ResponseEntity.ok(clientsService.updateClient(client));
+        }
+        catch (ClientNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
