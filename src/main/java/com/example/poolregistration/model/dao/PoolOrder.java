@@ -11,7 +11,7 @@ import java.time.LocalTime;
 public class PoolOrder {
     @Id
     @GeneratedValue
-    private Long id;
+    private String id;
 
     @ManyToMany
     private PoolClient client;
@@ -27,11 +27,11 @@ public class PoolOrder {
         this.duration = duration;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

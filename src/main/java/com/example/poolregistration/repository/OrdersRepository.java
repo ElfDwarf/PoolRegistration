@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface OrdersRepository extends JpaRepository<PoolOrder, Long> {
+public interface OrdersRepository extends JpaRepository<PoolOrder, String> {
 
     List<PoolOrder> findAllByReserveDate(LocalDate reserveDate);
 }

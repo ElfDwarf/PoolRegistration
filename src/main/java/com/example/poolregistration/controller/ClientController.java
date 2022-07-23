@@ -1,6 +1,6 @@
 package com.example.poolregistration.controller;
 
-import com.example.poolregistration.exceptions.ClientNotFoundException;
+import com.example.poolregistration.exceptions.NotFoundException;
 import com.example.poolregistration.model.dao.PoolClient;
 import com.example.poolregistration.model.response.BasicClientDataResponse;
 import com.example.poolregistration.service.ClientsService;
@@ -42,7 +42,7 @@ public class ClientController {
         try {
             return ResponseEntity.ok(clientsService.updateClient(client));
         }
-        catch (ClientNotFoundException e) {
+        catch (NotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }

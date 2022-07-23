@@ -1,6 +1,6 @@
 package com.example.poolregistration.service;
 
-import com.example.poolregistration.exceptions.ClientNotFoundException;
+import com.example.poolregistration.exceptions.NotFoundException;
 import com.example.poolregistration.model.dao.PoolClient;
 import com.example.poolregistration.model.response.BasicClientDataResponse;
 import com.example.poolregistration.repository.ClientsRepository;
@@ -22,7 +22,7 @@ public class ClientsService {
     public PoolClient updateClient(PoolClient client) {
         if(clientsRepository.existsById(client.getId()))
             return clientsRepository.save(client);
-        else throw new ClientNotFoundException();
+        else throw new NotFoundException();
     }
 
     public PoolClient addClient(PoolClient client) {
