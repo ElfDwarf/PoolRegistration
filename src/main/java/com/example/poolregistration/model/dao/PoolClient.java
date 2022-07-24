@@ -1,17 +1,23 @@
 package com.example.poolregistration.model.dao;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.persistence.*;
 
 @Entity(name = "client")
 public class PoolClient {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Schema(description = "ID клиента")
     private Long id;
 
+    @Schema(description = "ФИО клиента")
     private String name;
 
+    @Schema(description = "Номер телефона клиента")
     private String phone;
 
+    @Schema(description = "E-mail клиента")
     private String email;
 
     public PoolClient() {
