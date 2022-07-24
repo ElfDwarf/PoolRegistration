@@ -1,5 +1,6 @@
 package com.example.poolregistration.controller;
 
+import com.example.poolregistration.exceptions.ClientRegisteredException;
 import com.example.poolregistration.exceptions.NoAvailableQuotaException;
 import com.example.poolregistration.exceptions.NotFoundException;
 import com.example.poolregistration.model.dao.PoolOrder;
@@ -51,7 +52,7 @@ public class TimetableController {
         reserveService.cancel(cancelRequest.getClientId(), cancelRequest.getOrderId());
     }
 
-    @ExceptionHandler({NoAvailableQuotaException.class, DateTimeParseException.class})
+    @ExceptionHandler({NoAvailableQuotaException.class, DateTimeParseException.class, ClientRegisteredException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionResponse handleNoAvailableQuotaException(Exception exception) {
         return new ExceptionResponse(exception.getMessage(), LocalDateTime.now().toString());

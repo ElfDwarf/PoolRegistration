@@ -1,5 +1,6 @@
 package com.example.poolregistration.service;
 
+import com.example.poolregistration.exceptions.ClientRegisteredException;
 import com.example.poolregistration.exceptions.NoAvailableQuotaException;
 import com.example.poolregistration.exceptions.NotFoundException;
 import com.example.poolregistration.helper.DateHelper;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,11 +29,14 @@ public class ReserveService {
     private final DateTimeFormatter timeFormatter;
     private final DateTimeFormatter dateTimeFormatter;
 
+    private final ConcurrentHashMap<LocalDate, Object> locks;
+
     public ReserveService(ClientsRepository clientsRepository, OrdersRepository ordersRepository) {
         this.clientsRepository = clientsRepository;
         this.ordersRepository = ordersRepository;
         timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        locks = new ConcurrentHashMap<>();
     }
 
     public List<OrdersByDateResponse> getReservedByDate(String dateString) {
@@ -77,7 +82,7 @@ public class ReserveService {
         return result;
     }
 
-    public synchronized String reserve(long clientId, String datetime, int duration) throws NoAvailableQuotaException {
+    public String reserve(long clientId, String datetime, int duration) throws NoAvailableQuotaException {
         PoolClient client = getClient(clientId);
 
         LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(datetime));
@@ -90,33 +95,46 @@ public class ReserveService {
         if (!checkAvailability(localDate, localTime, duration)) {
             throw new NoAvailableQuotaException("All quota places are reserved");
         }
+        Object lock = handleSynchronizationLocks(localDate);
+        synchronized (lock) {
+            List<PoolOrder> orders = ordersRepository.findAllByReserveDate(localDate);
 
-        List<PoolOrder> orders = ordersRepository.findAllByReserveDate(localDate);
+            Optional<PoolOrder> optionalClientOrder = orders.stream().filter((poolOrder -> poolOrder.getClient() == client)).findFirst();
+            PoolOrder order = new PoolOrder(client, localDate, localTime, duration);
+            if (optionalClientOrder.isEmpty()) {
+                ordersRepository.save(order);
+                return order.getId();
+            }
 
-        Optional<PoolOrder> optionalClientOrder = orders.stream().filter((poolOrder -> poolOrder.getClient() == client)).findFirst();
-        PoolOrder order = new PoolOrder(client, localDate, localTime, duration);
-        if (optionalClientOrder.isEmpty()) {
-            ordersRepository.save(order);
-            return order.getId();
+            PoolOrder clientOrder = optionalClientOrder.get();
+            int orderTime = localTime.getHour();
+            int clientTime = clientOrder.getReserveTime().getHour();
+            int clientDuration = clientOrder.getDuration();
+
+            if (clientTime == orderTime + duration) {
+                clientOrder.setDuration(clientDuration + duration);
+                clientOrder.setReserveTime(clientOrder.getReserveTime().minusHours(duration));
+                ordersRepository.save(clientOrder);
+                return clientOrder.getId();
+            }
+            if (clientTime == orderTime - clientDuration) {
+                clientOrder.setDuration(clientDuration + duration);
+                ordersRepository.save(clientOrder);
+                return clientOrder.getId();
+            }
+            throw new ClientRegisteredException("Client with id " + clientOrder.getClient().getId() + " already registered");
         }
+    }
 
-        PoolOrder clientOrder = optionalClientOrder.get();
-        int orderTime = localTime.getHour();
-        int clientTime = clientOrder.getReserveTime().getHour();
-        int clientDuration = clientOrder.getDuration();
-
-        if (clientTime == orderTime + duration) {
-            clientOrder.setDuration(clientDuration + duration);
-            clientOrder.setReserveTime(clientOrder.getReserveTime().minusHours(duration));
-            ordersRepository.save(clientOrder);
-            return clientOrder.getId();
-        }
-        if (clientTime == orderTime - clientDuration) {
-            clientOrder.setDuration(clientDuration + duration);
-            ordersRepository.save(clientOrder);
-            return clientOrder.getId();
-        }
-        throw new RuntimeException("Client with id " + clientOrder.getClient().getId() + " already registered");
+    /**
+     * Получение объекта блокировки для эксклюзивного доступа во время бронирования
+     * @param localDate дата брони
+     * @return объект блокировки
+     */
+    private Object handleSynchronizationLocks(LocalDate localDate) {
+        List<LocalDate> oldLocks = locks.keySet().stream().filter(date -> date.isBefore(LocalDate.now())).toList();
+        oldLocks.forEach(locks::remove);
+        return locks.computeIfAbsent(localDate, (date)->new Object());
     }
 
     private boolean checkAvailability(LocalDate localDate, LocalTime localTime, int duration) {
