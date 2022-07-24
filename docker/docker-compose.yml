@@ -1,0 +1,29 @@
+version: '2'
+
+services:
+  app:
+    image: 'poolregistration:latest'
+    restart: always
+    container_name: poolRegistrationService
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgrespw
+    ports:
+      - "8080:8080"
+
+  db:
+    image: 'postgres:latest'
+    container_name: poolRegistrationDatabase
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespw
+    volumes:
+#      - ./data:/var/lib/postgresql/data
+      - poolregistrationdata:/var/lib/postgresql/data
+volumes:
+  poolregistrationdata:
+    external: true

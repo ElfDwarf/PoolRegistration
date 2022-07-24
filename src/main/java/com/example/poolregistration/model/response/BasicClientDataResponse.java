@@ -1,6 +1,5 @@
 package com.example.poolregistration.model.response;
 
-
 public class BasicClientDataResponse {
     private final Long id;
     private final String name;

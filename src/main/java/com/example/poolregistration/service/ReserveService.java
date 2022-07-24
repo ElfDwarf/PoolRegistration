@@ -145,4 +145,8 @@ public class ReserveService {
     private DateConstraints getDateConstraints(LocalDate date) {
         return DateHelper.getConstraints(date);
     }
+
+    public List<PoolOrder> getFullOrdersByDate(String date) {
+        return ordersRepository.findAllByReserveDate(LocalDate.parse(date));
+    }
 }

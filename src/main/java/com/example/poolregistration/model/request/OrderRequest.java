@@ -1,6 +1,5 @@
 package com.example.poolregistration.model.request;
 
-
 public class OrderRequest {
     private long clientId;
     private String datetime;
