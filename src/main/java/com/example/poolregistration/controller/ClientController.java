@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController(value = "api/v0/pool/client")
+@RestController
+@RequestMapping("/api/v0/pool/client")
 public class ClientController {
 
     private final ClientsService clientsService;
@@ -19,30 +20,30 @@ public class ClientController {
         this.clientsService = clientsService;
     }
 
-    @GetMapping("all")
+    @GetMapping("/all")
     public List<BasicClientDataResponse> getClients() {
         return clientsService.getClients();
     }
 
 
-    @GetMapping("get")
+    @GetMapping("/get")
     public ResponseEntity<PoolClient> getClient(@RequestParam("id") long id) {
         return ResponseEntity.of(clientsService.getClient(id));
     }
 
-    @GetMapping("search")
-    public List<PoolClient> getClient(@RequestParam("name") String name, @RequestParam("date") String date) {
+    @GetMapping("/search")
+    public List<PoolClient> getClient(@RequestParam(name = "name", required = false) String name, @RequestParam(name = "date", required = false) String date) {
         return clientsService.getClient(name, date);
     }
 
 
-    @PostMapping("add")
+    @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED)
     public PoolClient addClient(@RequestBody PoolClient client) {
         return clientsService.addClient(client);
     }
 
-    @PostMapping("update")
+    @PostMapping("/update")
     public ResponseEntity<PoolClient> updateClient(@RequestBody PoolClient client) {
         try {
             return ResponseEntity.ok(clientsService.updateClient(client));

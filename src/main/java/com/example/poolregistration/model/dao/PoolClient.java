@@ -1,14 +1,11 @@
 package com.example.poolregistration.model.dao;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity(name = "client")
 public class PoolClient {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private String name;
@@ -16,6 +13,9 @@ public class PoolClient {
     private String phone;
 
     private String email;
+
+    public PoolClient() {
+    }
 
     public PoolClient(String name, String phone, String email) {
         this.name = name;

@@ -1,24 +1,27 @@
 package com.example.poolregistration.model.dao;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Entity(name = "order")
+@Entity
 public class PoolOrder {
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    @ManyToMany
+    @ManyToOne
     private PoolClient client;
 
     private LocalDate reserveDate;
     private LocalTime reserveTime;
     private int duration;
+
+    public PoolOrder() {
+    }
 
     public PoolOrder(PoolClient client, LocalDate reserveDate, LocalTime reserveTime, int duration) {
         this.client = client;

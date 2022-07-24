@@ -27,8 +27,6 @@ public class ReserveService {
     private final DateTimeFormatter timeFormatter;
     private final DateTimeFormatter dateTimeFormatter;
 
-    private final int HOURS_IN_DAY = 24;
-
     public ReserveService(ClientsRepository clientsRepository, OrdersRepository ordersRepository) {
         this.clientsRepository = clientsRepository;
         this.ordersRepository = ordersRepository;
@@ -54,12 +52,12 @@ public class ReserveService {
         List<Integer> reservedByDate = getReservedByDateInner(date);
         DateConstraints constraints = getDateConstraints(date);
         int startTime = date.isEqual(LocalDate.now())
-                ? Math.max(LocalTime.now().getHour(), constraints.getStartTime())
+                ? Math.max(LocalTime.now().getHour() + 1, constraints.getStartTime())
                 : constraints.getStartTime();
 
         return Streams.mapWithIndex(reservedByDate.stream(),
                         (count, idx) -> new OrdersByDateResponse(LocalTime.of((int) idx, 0).format(timeFormatter), constraints.getMaxClientsPerTime() - count))
-                .limit(HOURS_IN_DAY - constraints.getEndTime())
+                .limit(constraints.getEndTime())
                 .skip(startTime)
                 .filter((order) -> order.getCount() > 0)
                 .collect(Collectors.toList());
@@ -67,6 +65,7 @@ public class ReserveService {
 
     private List<Integer> getReservedByDateInner(LocalDate date) {
         List<PoolOrder> ordersByDate = ordersRepository.findAllByReserveDate(date);
+        int HOURS_IN_DAY = 24;
         ArrayList<Integer> result = new ArrayList<>(Collections.nCopies(HOURS_IN_DAY, 0));
         ordersByDate.forEach(order -> {
             int duration = order.getDuration();
@@ -124,7 +123,7 @@ public class ReserveService {
         List<Integer> reserved = getReservedByDateInner(localDate);
         DateConstraints constraints = getDateConstraints(localDate);
         long countAvailable = reserved.stream()
-                .limit(Math.min(localTime.getHour() + duration - 1, constraints.getEndTime()))
+                .limit(Math.min(localTime.getHour() + duration, constraints.getEndTime()))
                 .skip(Math.max(localTime.getHour(), constraints.getStartTime()))
                 .filter((reservedCount) -> reservedCount < constraints.getMaxClientsPerTime()).count();
         return countAvailable == duration;

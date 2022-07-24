@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController(value = "api/v0/pool/timetable")
+@RestController
+@RequestMapping("/api/v0/pool/timetable")
 public class TimetableController {
 
     private final ReserveService reserveService;
@@ -17,23 +18,23 @@ public class TimetableController {
         this.reserveService = reserveService;
     }
 
-    @GetMapping("all")
+    @GetMapping("/all")
     public List<OrdersByDateResponse> getReservedOrdersByDate(@RequestParam("date") String date) {
         return reserveService.getReservedByDate(date);
     }
 
-    @GetMapping("available")
+    @GetMapping("/available")
     public List<OrdersByDateResponse> getAvailableOrdersByDate(@RequestParam("date") String date) {
         return reserveService.getAvailableByDate(date);
     }
 
-    @PostMapping("reserve")
-    public Long reserve(@RequestBody OrderRequest orderRequest) {
-        return reserveService.reserve(orderRequest.getClientId(), orderRequest.getDatetime());
+    @PostMapping("/reserve")
+    public String reserve(@RequestBody OrderRequest orderRequest) {
+        return reserveService.reserve(orderRequest.getClientId(), orderRequest.getDatetime(), orderRequest.getDuration());
     }
 
-    @GetMapping("cancel")
-    public Long cancelOrder(@RequestBody CancelRequest cancelRequest) {
-        return reserveService.cancel(cancelRequest.getClientId(), cancelRequest.getOrderId());
+    @PostMapping("/cancel")
+    public void cancelOrder(@RequestBody CancelRequest cancelRequest) {
+        reserveService.cancel(cancelRequest.getClientId(), cancelRequest.getOrderId());
     }
 }
