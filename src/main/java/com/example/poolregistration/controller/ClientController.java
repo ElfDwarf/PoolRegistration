@@ -30,6 +30,11 @@ public class ClientController {
         return ResponseEntity.of(clientsService.getClient(id));
     }
 
+    @GetMapping("search")
+    public List<PoolClient> getClient(@RequestParam("name") String name, @RequestParam("date") String date) {
+        return clientsService.getClient(name, date);
+    }
+
 
     @PostMapping("add")
     @ResponseStatus(HttpStatus.CREATED)

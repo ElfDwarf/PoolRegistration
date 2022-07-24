@@ -2,7 +2,8 @@ package com.example.poolregistration.service;
 
 import com.example.poolregistration.exceptions.NoAvailableQuotaException;
 import com.example.poolregistration.exceptions.NotFoundException;
-import com.example.poolregistration.model.constraints.DayConstraints;
+import com.example.poolregistration.helper.DateHelper;
+import com.example.poolregistration.model.constraints.DateConstraints;
 import com.example.poolregistration.model.dao.PoolClient;
 import com.example.poolregistration.model.dao.PoolOrder;
 import com.example.poolregistration.model.response.OrdersByDateResponse;
@@ -22,8 +23,6 @@ import java.util.stream.Collectors;
 public class ReserveService {
     private final ClientsRepository clientsRepository;
     private final OrdersRepository ordersRepository;
-    private final DayConstraints normalDayConstraints;
-    private final DayConstraints holidayConstraints;
 
     private final DateTimeFormatter timeFormatter;
     private final DateTimeFormatter dateTimeFormatter;
@@ -33,8 +32,6 @@ public class ReserveService {
     public ReserveService(ClientsRepository clientsRepository, OrdersRepository ordersRepository) {
         this.clientsRepository = clientsRepository;
         this.ordersRepository = ordersRepository;
-        normalDayConstraints = new DayConstraints(8, 20, 10);
-        holidayConstraints = new DayConstraints(10, 18, 10);
         timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     }
@@ -42,7 +39,6 @@ public class ReserveService {
     public List<OrdersByDateResponse> getReservedByDate(String dateString) {
         LocalDate date = LocalDate.parse(dateString);
         List<Integer> reservedByDate = getReservedByDateInner(date);
-        DayConstraints constraints = getDayConstraints(date);
 
         return Streams.mapWithIndex(reservedByDate.stream(),
                         (count, idx) -> new OrdersByDateResponse(LocalTime.of((int) idx, 0).format(timeFormatter), count))
@@ -52,13 +48,19 @@ public class ReserveService {
 
     public List<OrdersByDateResponse> getAvailableByDate(String dateString) {
         LocalDate date = LocalDate.parse(dateString);
+        if (date.isBefore(LocalDate.now()))
+            return new ArrayList<>();
+
         List<Integer> reservedByDate = getReservedByDateInner(date);
-        DayConstraints constraints = getDayConstraints(date);
+        DateConstraints constraints = getDateConstraints(date);
+        int startTime = date.isEqual(LocalDate.now())
+                ? Math.max(LocalTime.now().getHour(), constraints.getStartTime())
+                : constraints.getStartTime();
 
         return Streams.mapWithIndex(reservedByDate.stream(),
                         (count, idx) -> new OrdersByDateResponse(LocalTime.of((int) idx, 0).format(timeFormatter), constraints.getMaxClientsPerTime() - count))
                 .limit(HOURS_IN_DAY - constraints.getEndTime())
-                .skip(constraints.getStartTime())
+                .skip(startTime)
                 .filter((order) -> order.getCount() > 0)
                 .collect(Collectors.toList());
     }
@@ -80,29 +82,52 @@ public class ReserveService {
         PoolClient client = getClient(clientId);
 
         LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(datetime));
-        LocalDate localDate = localDateTime.toLocalDate();
-        LocalTime localTime = localDateTime.toLocalTime();
-
-        if(!checkAvailability(localDate, localTime, duration)) {
+        if (localDateTime.isBefore(LocalDateTime.now())) {
             throw new NoAvailableQuotaException("All quota places are reserved");
         }
 
-//        Optional<PoolOrder> clientOrder = orders.stream().filter((poolOrder -> poolOrder.getClient() == client)).findFirst();
-//        if (clientOrder.isEmpty()) {
-//
-//        }
-        return null;
+        LocalDate localDate = localDateTime.toLocalDate();
+        LocalTime localTime = localDateTime.toLocalTime();
+        if (!checkAvailability(localDate, localTime, duration)) {
+            throw new NoAvailableQuotaException("All quota places are reserved");
+        }
+
+        List<PoolOrder> orders = ordersRepository.findAllByReserveDate(localDate);
+
+        Optional<PoolOrder> optionalClientOrder = orders.stream().filter((poolOrder -> poolOrder.getClient() == client)).findFirst();
+        PoolOrder order = new PoolOrder(client, localDate, localTime, duration);
+        if (optionalClientOrder.isEmpty()) {
+            ordersRepository.save(order);
+            return order.getId();
+        }
+
+        PoolOrder clientOrder = optionalClientOrder.get();
+        int orderTime = localTime.getHour();
+        int clientTime = clientOrder.getReserveTime().getHour();
+        int clientDuration = clientOrder.getDuration();
+
+        if (clientTime == orderTime + duration) {
+            clientOrder.setDuration(clientDuration + duration);
+            clientOrder.setReserveTime(clientOrder.getReserveTime().minusHours(duration));
+            ordersRepository.save(clientOrder);
+            return clientOrder.getId();
+        }
+        if (clientTime == orderTime - clientDuration) {
+            clientOrder.setDuration(clientDuration + duration);
+            ordersRepository.save(clientOrder);
+            return clientOrder.getId();
+        }
+        throw new RuntimeException("Client with id " + clientOrder.getClient().getId() + " already registered");
     }
 
     private boolean checkAvailability(LocalDate localDate, LocalTime localTime, int duration) {
-        List<PoolOrder> orders = ordersRepository.findAllByReserveDate(localDate);
         List<Integer> reserved = getReservedByDateInner(localDate);
-        DayConstraints constraints = getDayConstraints(localDate);
+        DateConstraints constraints = getDateConstraints(localDate);
         long countAvailable = reserved.stream()
                 .limit(Math.min(localTime.getHour() + duration - 1, constraints.getEndTime()))
                 .skip(Math.max(localTime.getHour(), constraints.getStartTime()))
                 .filter((reservedCount) -> reservedCount < constraints.getMaxClientsPerTime()).count();
-        return  countAvailable == duration;
+        return countAvailable == duration;
     }
 
     private PoolClient getClient(long clientId) throws NotFoundException {
@@ -118,7 +143,7 @@ public class ReserveService {
         } else throw new NotFoundException("Client with id " + clientId + " have no provided order");
     }
 
-    private DayConstraints getDayConstraints(LocalDate date) {
-        return normalDayConstraints;
+    private DateConstraints getDateConstraints(LocalDate date) {
+        return DateHelper.getConstraints(date);
     }
 }

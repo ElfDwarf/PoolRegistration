@@ -11,4 +11,5 @@ import java.util.List;
 public interface OrdersRepository extends JpaRepository<PoolOrder, String> {
 
     List<PoolOrder> findAllByReserveDate(LocalDate reserveDate);
+
 }
