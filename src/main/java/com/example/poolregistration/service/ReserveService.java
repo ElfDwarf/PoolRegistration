@@ -84,7 +84,7 @@ public class ReserveService {
 
     public String reserve(long clientId, String datetime, int duration) throws NoAvailableQuotaException {
         if(duration < 1)
-            throw  new NoAvailableQuotaException("duration have to be 1 or more");
+            throw  new IllegalArgumentException("duration have to be 1 or more");
 
         PoolClient client = getClient(clientId);
 

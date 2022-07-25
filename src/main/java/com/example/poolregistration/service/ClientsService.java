@@ -30,7 +30,7 @@ public class ClientsService {
     public PoolClient updateClient(PoolClient client) {
         if (clientsRepository.existsById(client.getId()))
             return clientsRepository.save(client);
-        else throw new NotFoundException();
+        else throw new NotFoundException("client with id " + client.getId() + " not found");
     }
 
     public PoolClient addClient(PoolClient client) {

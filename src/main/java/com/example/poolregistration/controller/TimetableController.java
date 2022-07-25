@@ -58,7 +58,7 @@ public class TimetableController {
         reserveService.cancel(cancelRequest.getClientId(), cancelRequest.getOrderId());
     }
 
-    @ExceptionHandler({NoAvailableQuotaException.class, DateTimeParseException.class, ClientRegisteredException.class})
+    @ExceptionHandler({NoAvailableQuotaException.class, DateTimeParseException.class, ClientRegisteredException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionResponse handleNoAvailableQuotaException(Exception exception) {
         return new ExceptionResponse(exception.getMessage(), LocalDateTime.now().toString());
